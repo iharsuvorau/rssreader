@@ -7,6 +7,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
+	"sort"
 	"strconv"
 
 	"github.com/goinggo/newssearch/rss"
@@ -134,11 +136,38 @@ func (fdb *FileDatabase) listAt(id string) error {
 		return err
 	}
 
+	sort.Sort(byTime(doc.Channel.Item))
+
 	for _, item := range doc.Channel.Item {
 		fmt.Printf("%s %s (%s)\n", item.PubDate, item.Title, item.Link)
 	}
 
 	return nil
+}
+
+// byTime implements sort.Interface for []rss.item based in PubDate
+type byTime []rss.Item
+
+func (a byTime) Len() int {
+	return len(a)
+}
+
+func (a byTime) Swap(i, j int) {
+	a[i], a[j]= a[j], a[i]
+}
+
+func (a byTime) Less(i, j int) bool {
+	t1, err := time.Parse(time.RFC1123Z, a[i].PubDate)
+	if err != nil {
+		return false
+	}
+
+	t2, err := time.Parse(time.RFC1123Z, a[j].PubDate)
+	if err != nil {
+		return false
+	}
+
+	return !t1.Before(t2)
 }
 
 func main() {
