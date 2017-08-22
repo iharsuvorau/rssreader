@@ -14,7 +14,7 @@ import (
 
 const fdbLocation = "/Users/ihar/.feeds"
 
-// FileDatabase is database of feeds' locations.
+// FileDatabase is a database of feeds' locations.
 type FileDatabase struct {
 	Location string
 	Urls     []string
