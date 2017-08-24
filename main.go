@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 	"sort"
+	"strings"
 	"strconv"
 
 	"github.com/goinggo/newssearch/rss"
@@ -114,7 +115,7 @@ func (fdb *FileDatabase) list() error {
 	}
 
 	for i, doc := range docs {
-		fmt.Printf("[%d] %s\n", i, doc.Channel.Title)
+		fmt.Printf("[%d] %s\n", i, strings.Trim(doc.Channel.Title, "\n \t  "))
 	}
 
 	return nil
