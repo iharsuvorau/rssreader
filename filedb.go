@@ -7,9 +7,10 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
-	"github.com/goinggo/newssearch/rss"
+	"github.com/iharsuvorau/rssreader/rss"
 )
 
 const fdbLocation = "/Users/ihar/.feeds"
@@ -71,7 +72,7 @@ func (fdb *FileDatabase) read() error {
 	return nil
 }
 
-func (fdb *FileDatabase) fetch(id int) (*rss.Document, error) {
+func (fdb *FileDatabase) fetchAt(id int) (*rss.Document, error) {
 	err := fdb.read()
 	if err != nil {
 		return nil, err
@@ -91,18 +92,33 @@ func (fdb *FileDatabase) fetchAll() ([]*rss.Document, error) {
 		return nil, err
 	}
 
-	docs := []*rss.Document{}
+	errs := make(chan error, len(fdb.Urls))
+	docs := make(chan *rss.Document, len(fdb.Urls))
+	var wg sync.WaitGroup
 
 	for _, url := range fdb.Urls {
-		doc, err := rss.RetrieveRssFeed("rssreader", url)
-		if err != nil {
-			return nil, err
-		}
-
-		docs = append(docs, doc)
+		wg.Add(1)
+		go func(url string) {
+			fetch(url, errs, docs)
+			wg.Done()
+		}(url)
 	}
 
-	return docs, nil
+	wg.Wait()
+	close(errs)
+	close(docs)
+
+	collection := []*rss.Document{}
+	for doc := range docs {
+		collection = append(collection, doc)
+	}
+	for err = range errs {
+		if err != nil {
+			return collection, err
+		}
+	}
+
+	return collection, err
 }
 
 func (fdb *FileDatabase) list() error {
@@ -129,7 +145,7 @@ func (fdb *FileDatabase) listAt(id string) error {
 		return err
 	}
 
-	doc, err := fdb.fetch(n)
+	doc, err := fdb.fetchAt(n)
 	if err != nil {
 		return err
 	}
@@ -166,4 +182,15 @@ func (a byTime) Less(i, j int) bool {
 	}
 
 	return !t1.Before(t2)
+}
+
+//
+
+func fetch(loc string, errs chan error, docs chan *rss.Document) {
+	doc, err := rss.RetrieveRssFeed("rssreader", loc)
+	if err != nil {
+		errs <- err
+	}
+
+	docs <- doc
 }
