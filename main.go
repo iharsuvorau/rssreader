@@ -11,9 +11,11 @@ import (
 )
 
 func main() {
+	db := flag.String("db", "/Users/ihar/.feeds", "feeds' database location")
 	url := flag.String("a", "", "add a feed's URL to fetch")
 	list := flag.Bool("l", false, "show a list of current feeds")
 	show := flag.String("s", "", "show a list of items for a feed with the specified index")
+	kind := flag.String("k", "", "one of: json, xml, parsehub")
 
 	cpuprof := flag.String("cpu", "", "write cpu profile to the file")
 	memprof := flag.String("mem", "", "write memory profile to the file")
@@ -21,8 +23,8 @@ func main() {
 	flag.Parse()
 
 	fdb := FileDatabase{
-		Location: fdbLocation,
-		Urls:     []string{},
+		Location: *db,
+		Feeds:    []Feed{},
 	}
 
 	var err error
@@ -59,7 +61,7 @@ func main() {
 	}
 
 	if len(*url) > 0 {
-		if err = fdb.save(*url); err != nil {
+		if err = fdb.save(*url, *kind); err != nil {
 			fmt.Println(err)
 		}
 	}
