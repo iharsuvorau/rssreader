@@ -28,6 +28,13 @@ type Feed struct {
 	Kind string // xml, json, json:gunzip
 }
 
+func newFileDatabase(db string) *FileDatabase {
+	return &FileDatabase{
+		Location: db,
+		Feeds:    []Feed{},
+	}
+}
+
 func (fdb *FileDatabase) init() error {
 	_, err := os.Stat(fdb.Location)
 

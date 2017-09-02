@@ -22,10 +22,7 @@ func main() {
 
 	flag.Parse()
 
-	fdb := FileDatabase{
-		Location: *db,
-		Feeds:    []Feed{},
-	}
+	fdb := newFileDatabase(*db)
 
 	var err error
 
