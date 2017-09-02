@@ -127,8 +127,12 @@ func (fdb *FileDatabase) list() error {
 		return err
 	}
 
-	for i, doc := range docs {
-		fmt.Printf("[%d] %s\n", i, strings.Trim(doc.Channel.Title, "\n \t  "))
+	for i, url := range fdb.Urls {
+		for _, doc := range docs {
+			if url == doc.Channel.Link {
+				fmt.Printf("[%d] %s\n", i, strings.Trim(doc.Channel.Title, "\n \t  "))
+			}
+		}
 	}
 
 	return nil
@@ -191,6 +195,7 @@ func fetch(loc string, errs chan error, docs chan *rss.Document) {
 	if err != nil {
 		errs <- err
 	}
+	doc.Channel.Link = loc
 
 	docs <- doc
 }
